@@ -74,13 +74,15 @@ def shuffle_decode(deck,r_list):
         s_d.append(deck[int(item)])
     return s_d
 def pick_d_pile():
-    global user_deck
-    user_deck.append(d_pile)
-    mixer.music.play()
-    global to_drop,move
-    move = "d_pile"
-    to_drop = True
-    mixer.music.play()
+    global to_drop
+    if not to_drop:
+        global user_deck
+        user_deck.append(d_pile)
+        mixer.music.play()
+        global move
+        move = "d_pile"
+        to_drop = True
+        mixer.music.play()
 def pick_pile():
     global to_drop,move
     if not to_drop:

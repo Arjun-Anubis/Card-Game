@@ -96,16 +96,18 @@ def shuffle(deck,length):
     return s_d,r_list
 
 def pick_d_pile():
-    global user_deck
-    user_deck.append(d_pile)
+    global to_drop
+    if not to_drop:
+        global user_deck
+        user_deck.append(d_pile)
 
-    mixer.music.play()
+        mixer.music.play()
 
-    global to_drop,move
-    to_drop = True
+        global move
+        to_drop = True
 
-    mixer.music.play()
-    move = "d_pile"
+        mixer.music.play()
+        move = "d_pile"
 
 def pick_pile():
     global to_drop,move
