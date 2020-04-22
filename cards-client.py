@@ -72,22 +72,23 @@ def pick_d_pile():
     global user_deck
     user_deck.append(d_pile)
     mixer.music.play()
-    global to_drop
+    global to_drop,move
     to_drop = True
+    move = "d_pile"
     mixer.music.play()
 def pick_pile():
     global to_drop
     if not to_drop:
-        global user_deck,pile
+        global user_deck,pile,move
         user_deck.append(pile[0])
         mixer.music.play()
         #user_deck = sorted(user_deck,key = get_index)
         #printd(pile)
         pile = pile[1:]
-        #global to_drop
         to_drop= True
         #print(len(user_deck))
         refresh_pile()
+        move = "pile"
         mixer.music.play()
 def drop(item):
     global to_drop
@@ -315,7 +316,16 @@ def recv_loop():
         print(msg.decode("utf-8"))
         global d_pile
         temp  = msg.decode("utf-8").split(" ")
-        d_pile = card(temp[0],int(temp[1]),int(temp[2]))
+        the_crd = card(temp[1],str(temp[2]),str(temp[3]))
+        if temp[0] == "pile":
+            comp_deck.append(pile[0])
+            pile = pile[1:]
+            comp_deck.remove(the_crd)
+            d_pile = the_crd
+        else:
+            comp_deck.append(d_pile)
+            comp_deck.remove(the_crd)
+            d_pile = the_crd
         refresh()
 def send_loop():
     global to_send
@@ -325,7 +335,7 @@ def send_loop():
     s2.connect((host,port))
     while True:
         if to_send:
-            s2.send(bytes(d_pile.suit + " " + str(d_pile.value) + " " + str(d_pile.ide),"utf-8"))
+            s2.send(bytes(move + " " + d_pile.suit + " " + str(d_pile.value) + " " + str(d_pile.ide),"utf-8"))
             to_send = False
 t1 = threading.Thread(target=recv_loop)
 t2 = threading.Thread(target = send_loop)
@@ -338,11 +348,11 @@ root.bind("<Key-s>",submit)
 
 #deck = shuffle(deck)
 global comp_deck
-comp_deck = deck[13:26]
-comp_deck = sorted(comp_deck, key = get_index)
+user_deck = deck[13:26]
+user_deck = sorted(comp_deck, key = get_index)
 global user_deck
-user_deck = deck[:13]
-user_deck = sorted(user_deck, key = get_index)
+comp_deck = deck[:13]
+comp_deck = sorted(user_deck, key = get_index)
 global d_pile
 d_pile = deck[26]
 global pile
