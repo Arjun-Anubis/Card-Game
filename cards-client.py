@@ -41,7 +41,7 @@ com_to_drop = False
 global to_send
 to_send = False
 class card:
-	def __init__(self,suit,value,ide):
+    def __init__(self,suit,value,ide):
             self.suit = suit
             self.value = value
             self.ide = ide
@@ -50,45 +50,50 @@ class card:
             self.photo = ImageTk.PhotoImage(image)
 deck = []
 for i in range(13):
-	k = card(suit='Spade',value = i+1,ide = i+1001)
-	deck.append(k)
+    k = card(suit='Spade',value = i+1,ide = i+1001)
+    deck.append(k)
 for i in range(13):
-	k = card(suit='Heart',value = i+1,ide = i+2001)
-	deck.append(k)
+    k = card(suit='Heart',value = i+1,ide = i+2001)
+    deck.append(k)
 for i in range(13):
-	k = card(suit='Diamond',value = i+1,ide = i+3001)
-	deck.append(k)
+    k = card(suit='Diamond',value = i+1,ide = i+3001)
+    deck.append(k)
 for i in range(13):
-	k = card(suit='Club',value = i+1,ide = i+4001)
-	deck.append(k)
+    k = card(suit='Club',value = i+1,ide = i+4001)
+    deck.append(k)
 def shuffle(deck):
-	s_d = []
-	while len(s_d) < 52:
-		a = randint(0,51)
-		if deck[a] not in s_d:
-			s_d.append(deck[a])
-	return s_d
+    s_d = []
+    while len(s_d) < 52:
+        a = randint(0,51)
+        if deck[a] not in s_d:
+            s_d.append(deck[a])
+    return s_d
+def shuffle_decode(deck,r_list):
+    s_d = []
+    for item in r_list:
+        s_d.append(deck[int(item)])
+    return s_d
 def pick_d_pile():
     global user_deck
     user_deck.append(d_pile)
     mixer.music.play()
     global to_drop,move
-    to_drop = True
     move = "d_pile"
+    to_drop = True
     mixer.music.play()
 def pick_pile():
-    global to_drop
+    global to_drop,move
     if not to_drop:
-        global user_deck,pile,move
+        global user_deck,pile
         user_deck.append(pile[0])
         mixer.music.play()
         #user_deck = sorted(user_deck,key = get_index)
         #printd(pile)
         pile = pile[1:]
+        move = "pile"
         to_drop= True
         #print(len(user_deck))
         refresh_pile()
-        move = "pile"
         mixer.music.play()
 def drop(item):
     global to_drop
@@ -96,7 +101,8 @@ def drop(item):
         to_drop = False
         global d_pile
         d_pile = item
-        global user_deck
+        global user_deck,drop_index
+        drop_index = user_deck.index(item)
         user_deck.remove(item)
         user_deck = sorted(user_deck,key = get_index)
         mixer.music.play()
@@ -149,17 +155,17 @@ def undisp_back(item):
     lbl.pack(side = LEFT)
      
 def printd(list):
-	for item in list:
-		if item.value == 1:
-			print("A of " + item.suit)
-		if 11 > item.value > 1:
-			print( str(item.value) + " of " + item.suit)
-		if item.value == 11:
-			print("J of " + item.suit)
-		if item.value == 12:
-			print("Q of " + item.suit)
-		if item.value == 13:
-			print("K of " + item.suit)
+    for item in list:
+        if item.value == 1:
+            print("Ace of " + item.suit)
+        if 11 > item.value > 1:
+            print( str(item.value) + " of " + item.suit)
+        if item.value == 11:
+            print("Jack of " + item.suit)
+        if item.value == 12:
+            print("Queen of " + item.suit)
+        if item.value == 13:
+            print("King of " + item.suit)
 def get_index(item):
 
     return item.ide
@@ -310,32 +316,36 @@ def cancel(event):
     disable()
 def recv_loop():
     s = socket.socket()
-    s.connect(("192.168.1.37",9518))
+    s.connect(("192.168.1.37",9519))
     while True:
         msg = s.recv(1024)
         print(msg.decode("utf-8"))
-        global d_pile
+        global d_pile,pile,comp_deck
         temp  = msg.decode("utf-8").split(" ")
-        the_crd = card(temp[1],str(temp[2]),str(temp[3]))
+        the_card = card(temp[1],int(temp[2]),int(temp[3]))
         if temp[0] == "pile":
-            comp_deck.append(pile[0])
+            comp_deck.append(the_card)
             pile = pile[1:]
-            comp_deck.remove(the_crd)
-            d_pile = the_crd
+            comp_deck.pop(int(temp[4]))
+            comp_deck = sorted(comp_deck,key = get_index)
+            printd(comp_deck)
+            d_pile = the_card
         else:
             comp_deck.append(d_pile)
-            comp_deck.remove(the_crd)
-            d_pile = the_crd
+            comp_deck.pop(int(temp[4]))
+            comp_deck = sorted(comp_deck,key = get_index)
+            printd(comp_deck)
+            d_pile = the_card
         refresh()
 def send_loop():
     global to_send
     s2 = socket.socket()
     host = "192.168.1.37" 
-    port = 8006
+    port = 8007
     s2.connect((host,port))
     while True:
         if to_send:
-            s2.send(bytes(move + " " + d_pile.suit + " " + str(d_pile.value) + " " + str(d_pile.ide),"utf-8"))
+            s2.send(bytes(move + " " + d_pile.suit + " " + str(d_pile.value) + " " + str(d_pile.ide) + " " + str(drop_index),"utf-8"))
             to_send = False
 t1 = threading.Thread(target=recv_loop)
 t2 = threading.Thread(target = send_loop)
@@ -346,13 +356,16 @@ root.bind("<Key-c>",cancel)
 root.bind("<Key-s>",submit)
 
 
-#deck = shuffle(deck)
-global comp_deck
+m_s = socket.socket()
+m_s.connect(("192.168.1.37",3580))
+ps_deck = m_s.recv(1024).decode("utf-8")
+ps_deck = ps_deck.split()
+deck = shuffle_decode(deck,ps_deck)
+global comp_deck,user_deck
 user_deck = deck[13:26]
-user_deck = sorted(comp_deck, key = get_index)
-global user_deck
+user_deck = sorted(user_deck, key = get_index)
 comp_deck = deck[:13]
-comp_deck = sorted(user_deck, key = get_index)
+comp_deck = sorted(comp_deck, key = get_index)
 global d_pile
 d_pile = deck[26]
 global pile
