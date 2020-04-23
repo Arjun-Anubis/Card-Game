@@ -40,6 +40,8 @@ global com_to_drop
 com_to_drop = False
 global to_send
 to_send = False
+global win
+win = False 
 class card:
     def __init__(self,suit,value,ide):
             self.suit = suit
@@ -304,7 +306,9 @@ def declare_start(event):
     set_cards()
 def finish():
     if user_deck == []:
-        print("player 1 wins!!")
+        print("You win!!")
+        global win
+        win = True
         root.destroy()
         #root1.destroy()
         #butt.destroy()
@@ -324,23 +328,29 @@ def recv_loop():
         print(msg.decode("utf-8"))
         global d_pile,pile,comp_deck
         temp  = msg.decode("utf-8").split(" ")
-        the_card = card(temp[1],int(temp[2]),int(temp[3]))
+        try:
+            the_card = card(temp[1],int(temp[2]),int(temp[3]))
+        except:
+            pass
         if temp[0] == "pile":
             comp_deck.append(the_card)
             pile = pile[1:]
             comp_deck.pop(int(temp[4]))
             comp_deck = sorted(comp_deck,key = get_index)
-            printd(comp_deck)
             d_pile = the_card
-        else:
+        elif temp[0] == "d_pile":
             comp_deck.append(d_pile)
             comp_deck.pop(int(temp[4]))
             comp_deck = sorted(comp_deck,key = get_index)
-            printd(comp_deck)
             d_pile = the_card
+        elif temp[0] == "won":
+            print("sorry you lost,better luck next time")
+            root.destroy()
+            s.close()
+            exit()
         refresh()
 def send_loop():
-    global to_send
+    global to_send,win
     s2 = socket.socket()
     host = "192.168.1.37" 
     port = 8007
@@ -349,6 +359,8 @@ def send_loop():
         if to_send:
             s2.send(bytes(move + " " + d_pile.suit + " " + str(d_pile.value) + " " + str(d_pile.ide) + " " + str(drop_index),"utf-8"))
             to_send = False
+        elif win:
+            s2.send(bytes("won","utf-8"))
 t1 = threading.Thread(target=recv_loop)
 t2 = threading.Thread(target = send_loop)
 t1.start()
