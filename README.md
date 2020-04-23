@@ -1,3 +1,3 @@
 # Card-Game
-Multiple versions of my python tkinter card game
+Multiple versions of my python tkinter card game\n
 close to complete ...
