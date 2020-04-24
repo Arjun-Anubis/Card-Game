@@ -6,6 +6,7 @@ from time import *
 from pygame import mixer
 import threading
 import socket
+import sys
 global sel,keep
 sel = []
 keep = True
@@ -322,7 +323,11 @@ def cancel(event):
     disable()
 def recv_loop():
     s = socket.socket()
-    s.connect(("192.168.1.37",9519))
+    try:
+        host = sys.argv[1]
+    except:
+        host = "127.0.0.1"
+    s.connect((host,9519))
     while True:
         msg = s.recv(1024)
         print(msg.decode("utf-8"))
@@ -352,7 +357,10 @@ def recv_loop():
 def send_loop():
     global to_send,win
     s2 = socket.socket()
-    host = "192.168.1.37" 
+    try:
+        host = sys.argv[1]
+    except:
+        host = "127.0.0.1"
     port = 8007
     s2.connect((host,port))
     while True:
@@ -371,7 +379,11 @@ root.bind("<Key-s>",submit)
 
 
 m_s = socket.socket()
-m_s.connect(("192.168.1.37",3580))
+try:
+    host = sys.agrv[1]
+except:
+    host = "127.0.0.1"
+m_s.connect((host,3580))
 ps_deck = m_s.recv(1024).decode("utf-8")
 ps_deck = ps_deck.split()
 deck = shuffle_decode(deck,ps_deck)
