@@ -18,7 +18,7 @@ mixer.music.load("click.mp3")
 global root
 root = Tk()
 root.title("Player 1")
-root.iconbitmap("cardy.ico")
+#root.iconbitmap("./cardy.ico")
 root.configure(background = "green")
 global bottom_frame
 bottom_frame = Frame(root)
@@ -32,7 +32,7 @@ mid_frame.pack(side = BOTTOM)
 global right_frame
 right_frame = Frame(root)
 right_frame.pack(side = LEFT)
-image = Image.open("PNG\\green_back.png")
+image = Image.open("PNG/green_back.png")
 image = image.resize((100, 153), Image.ANTIALIAS) ## The (250, 250) is (height, width)
 back = ImageTk.PhotoImage(image)
 global to_drop
@@ -48,7 +48,7 @@ class card:
             self.suit = suit
             self.value = value
             self.ide = ide
-            image = Image.open("PNG\\" +str(value) + self.suit[0] + ".png")
+            image = Image.open("PNG/" +str(value) + self.suit[0] + ".png")
             image = image.resize((100, 153), Image.ANTIALIAS)
             self.photo = ImageTk.PhotoImage(image)
 deck = []
