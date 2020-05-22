@@ -1,4 +1,5 @@
 from random import randint
+import os
 from tkinter import *
 from tkinter import messagebox
 from PIL import Image,ImageTk
@@ -51,10 +52,10 @@ to_send = False
 global win
 win = False
 class card:
-    def __init__(self,suit,value,ide):
+    def __init__(self,suit,value,id):
             self.suit = suit
             self.value = value
-            self.ide = ide
+            self.id = id
 
 
             image = Image.open("PNG/" +str(value) + self.suit[0] + ".png")
@@ -68,22 +69,22 @@ deck = []
 
 
 for i in range(13):
-    k = card(suit='Spade',value = i+1,ide = i+1001)
+    k = card(suit='Spade',value = i+1,id = i+1001)
     deck.append(k)
 
 
 for i in range(13):
-    k = card(suit='Heart',value = i+1,ide = i+2001)
+    k = card(suit='Heart',value = i+1,id = i+2001)
     deck.append(k)
 
 
 for i in range(13):
-    k = card(suit='Diamond',value = i+1,ide = i+3001)
+    k = card(suit='Diamond',value = i+1,id = i+3001)
     deck.append(k)
 
 
 for i in range(13):
-    k = card(suit='Club',value = i+1,ide = i+4001)
+    k = card(suit='Club',value = i+1,id = i+4001)
     deck.append(k)
 
 
@@ -180,15 +181,15 @@ def disp_inrframe(item):
      btn.pack(side = LEFT)
      
 def undisp(item,frame_name):
-    lbl = Label(frame_name,image = item.photo,bg = "green")
+    lbl = Label(frame_name,image = item.photo,bg = "green",borderwidth = 0)
     lbl.pack(side = LEFT)
     
 def undisp_intframe_pile(item):
-    lbl = Label(top_frame,image = item.photo,bg = "green")
+    lbl = Label(top_frame,image = item.photo,bg = "green",borderwidth = 0)
     lbl.pack(side = LEFT)
    
 def undisp_back(item):
-    lbl = Label(top_frame,image = back,bg = "green")
+    lbl = Label(top_frame,image = back,bg = "green",borderwidth = 0)
     lbl.pack(side = LEFT)
      
 def printd(list):
@@ -205,7 +206,7 @@ def printd(list):
             print("K of " + item.suit)
 def get_index(item):
 
-    return item.ide
+    return item.id
 def refresh():
     global bottom_frame
     global top_frame
@@ -313,7 +314,7 @@ def submit(event):
     else:
         for item in sel[:-1]:
             a = (item.suit == sel[k].suit)
-            b = (sel[k].ide == item.ide +1 or sel[k].ide == item.ide - 12)
+            b = (sel[k].id == item.id +1 or sel[k].id == item.id - 12)
             c = (item.value == sel[k].value)
             d = (len(sel) >= 3)
             if (a and b and d) or (c and d):
@@ -380,6 +381,8 @@ def recv_loop():
             root.destroy()
             s.close()
             exit()
+        elif temp[0] == 'quit':
+            quit()
         refresh()
 def send_loop():
     global to_send
@@ -392,14 +395,24 @@ def send_loop():
     print(f'Got connection from{addr}')
     while True:
         if to_send:
-            clientsocket.send(bytes(move + " " + d_pile.suit + " " + str(d_pile.value) + " " + str(d_pile.ide) + " " + str(drop_index) + " " + str(drop_index),"utf-8"))
+            clientsocket.send(bytes(move + " " + d_pile.suit + " " + str(d_pile.value) + " " + str(d_pile.id) + " " + str(drop_index) + " " + str(drop_index),"utf-8"))
             to_send = False
         elif win:
             clientsocket.send(bytes("won","utf-8"))
-t1 = threading.Thread(target=recv_loop)
-t2 = threading.Thread(target = send_loop)
+def listen_for_quit():
+    s = socket.socket()
+    s.bind(('',3201))
+    s.listen(1)
+    c,a  =s.accept()
+    if c.recv(1024).decode('utf-8') == 'quit':
+        os._exit(0)
+
+t1 = threading.Thread(target=recv_loop ,daemon = True)
+t2 = threading.Thread(target = send_loop ,daemon = True)
+t3 = threading.Thread(target = listen_for_quit ,daemon = True)
 t1.start()
 t2.start()
+t3.start()
 root.bind("<Return>",declare_start)
 root.bind("<Key-c>",cancel)
 root.bind("<Key-s>",submit)
@@ -433,4 +446,9 @@ for i in range(6):
     disp_inbframe(user_deck[i+7])
 disp_back(pile[0])
 disp_intframe(d_pile)   
-root.mainloop()  
+root.mainloop()
+m_s = socket.socket()
+m_s.connect(('',3200))
+m_s.send(bytes('quit',"utf-8")) 
+quit()
+quit()
